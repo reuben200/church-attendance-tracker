@@ -37,8 +37,14 @@ import {
   Clock,
   Heart,
   LogOut,
-  Key
+  Key,
+  Download,
+  Smartphone,
+  Sparkles,
+  Share2,
+  X
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
   // --- 1. State Initialization with Real Firestore sync ---
@@ -56,6 +62,87 @@ export default function App() {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(() => {
     return localStorage.getItem('church_user_member_id') || sessionStorage.getItem('church_user_member_id');
   });
+
+  // --- PWA Installation Support ---
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+
+  useEffect(() => {
+    // Check if app is already running as standalone (installed)
+    const isStandalone = 
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (navigator as any).standalone === true;
+
+    if (isStandalone) {
+      return;
+    }
+
+    // Check if dismissed in this browser session
+    const isDismissed = localStorage.getItem('pwa_install_prompt_dismissed') === 'true';
+    if (isDismissed) {
+      return;
+    }
+
+    // Detect if device is iOS (iPhone/iPad/iPod)
+    const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(iosDevice);
+
+    if (iosDevice) {
+      // iOS doesn't support 'beforeinstallprompt', so we proactively prompt with manual guide
+      // Wait slightly after launch to make it feel natural
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent browser default prompt
+      e.preventDefault();
+      // Stash the event
+      setDeferredPrompt(e);
+      // Show the beautiful prompt after 3 seconds so they see the app load first
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+      // Toggle step-by-step instructions for Apple Safari users
+      setShowIOSInstructions(true);
+      return;
+    }
+
+    if (!deferredPrompt) return;
+
+    // Trigger the native installation flow
+    deferredPrompt.prompt();
+
+    // Await user's selection
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User installation choice outcome: ${outcome}`);
+
+    // Clean up
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
+
+  const handleDismissPrompt = () => {
+    setShowInstallPrompt(false);
+    // Persist user dismissal choice
+    localStorage.setItem('pwa_install_prompt_dismissed', 'true');
+  };
 
   // --- Real-Time Sync & Initialization from Firestore ---
   useEffect(() => {
@@ -577,6 +664,84 @@ export default function App() {
           Igbe Church of Christ Attendance Tracker • Secure Local Congregation Management • Standard UTC Time Sandbox
         </p>
       </footer>
+
+      {/* PWA Installation Prompt Panel */}
+      <AnimatePresence>
+        {showInstallPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            id="pwa-install-banner"
+            className="fixed bottom-0 left-0 w-full md:bottom-6 md:right-6 md:left-auto md:w-96 bg-white border-t md:border border-[#E6E4DD] md:rounded-2xl shadow-2xl p-5 z-50 font-sans"
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-2.5 bg-[#FAF9F6] rounded-xl border border-[#E6E4DD] text-[#5A5A40] shrink-0 animate-pulse">
+                <Smartphone className="w-6 h-6" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-serif font-bold text-[#3D3D33] flex items-center gap-1.5">
+                    Install App <Sparkles className="w-3.5 h-3.5 text-[#D4A373]" />
+                  </h3>
+                  <button
+                    onClick={handleDismissPrompt}
+                    className="p-1 hover:bg-[#FAF9F6] rounded-full text-[#7A7A66] hover:text-[#3D3D33] transition-colors"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-[#7A7A66] mt-1.5 leading-relaxed">
+                  Add <strong>Igbe Attendance Tracker</strong> to your home screen for quick offline access, instant load times, and a full-screen experience.
+                </p>
+
+                {showIOSInstructions ? (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mt-3 p-3 bg-[#FAF9F6] border border-[#E6E4DD] rounded-xl text-[11px] text-[#3D3D33] space-y-2 leading-relaxed"
+                  >
+                    <p className="font-bold text-[#5A5A40] text-[10px] uppercase tracking-wider">
+                      Safari iOS Manual Steps:
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1.5 text-[#5A5A40]">
+                      <li>
+                        Tap the <strong>Share</strong> button <Share2 className="w-3.5 h-3.5 inline mx-1 text-[#5A5A40]" /> in Safari.
+                      </li>
+                      <li>
+                        Scroll down and select <strong>Add to Home Screen</strong>.
+                      </li>
+                      <li>
+                        Tap <strong>Add</strong> in the top-right corner.
+                      </li>
+                    </ol>
+                  </motion.div>
+                ) : (
+                  <div className="flex items-center gap-2 mt-4">
+                    <button
+                      onClick={handleInstallClick}
+                      className="flex-1 bg-[#5A5A40] hover:bg-[#4E4E37] text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 shadow transition-all cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      {isIOS ? 'Show Guide' : 'Install now'}
+                    </button>
+                    <button
+                      onClick={handleDismissPrompt}
+                      className="flex-1 bg-white hover:bg-[#FAF9F6] border border-[#E6E4DD] text-[#7A7A66] hover:text-[#3D3D33] text-xs font-bold py-2 px-3 rounded-lg text-center transition-all cursor-pointer"
+                    >
+                      Maybe later
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
