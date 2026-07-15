@@ -248,7 +248,8 @@ export default function App() {
     title: MemberTitle,
     name: string,
     isSick: boolean,
-    isVisible: boolean
+    isVisible: boolean,
+    birthday?: string
   ) => {
     // Generate unique 7-digit alphanumeric code
     let accessCode = '';
@@ -273,6 +274,7 @@ export default function App() {
       isVisible,
       role: 'member',
       accessCode,
+      birthday: birthday || '',
     };
 
     try {
