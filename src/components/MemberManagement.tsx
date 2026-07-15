@@ -208,7 +208,7 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
       title: editTitle,
       name: editName.trim(),
       role: editRole,
-      birthday: bday || undefined,
+      birthday: bday || '',
     });
     setEditingId(null);
   };
