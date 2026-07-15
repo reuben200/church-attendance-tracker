@@ -46,7 +46,13 @@ export async function addMemberToFirestore(member: Member): Promise<void> {
 }
 
 export async function updateMemberInFirestore(id: string, data: Partial<Member>): Promise<void> {
-  await updateDoc(doc(db, MEMBERS_COLLECTION, id), data);
+  const sanitized: Record<string, any> = {};
+  Object.entries(data).forEach(([key, val]) => {
+    if (val !== undefined) {
+      sanitized[key] = val;
+    }
+  });
+  await updateDoc(doc(db, MEMBERS_COLLECTION, id), sanitized);
 }
 
 export async function deleteMemberFromFirestore(id: string): Promise<void> {
