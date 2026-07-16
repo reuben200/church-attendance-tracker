@@ -64,17 +64,17 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
   const [topic, setTopic] = useState(notice?.topic || '');
   const [date, setDate] = useState(toYYYYMMDD(notice?.date || ''));
   const [time, setTime] = useState(notice?.time || '5:00 PM');
-  const [host, setHost] = useState(notice?.host || '');
+  const [host, setHost] = useState(notice?.host || 'To be Announced');
   const [address, setAddress] = useState(notice?.address || '');
   const [saving, setSaving] = useState(false);
 
   // Initialize form fields when notice loads or editing starts
   React.useEffect(() => {
     if (notice) {
-      setTopic(notice.topic);
+      setTopic(notice.topic || '');
       setDate(toYYYYMMDD(notice.date));
       setTime(notice.time || '5:00 PM');
-      setHost(notice.host);
+      setHost(notice.host || 'To be Announced');
       setAddress(notice.address);
     }
   }, [notice, isEditing]);
@@ -241,17 +241,22 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
           <form onSubmit={handleSave} className="space-y-3">
             <div>
               <label className="block text-[9px] font-bold text-[#7A7A66] uppercase tracking-wider mb-1">
-                Fellowship Topic
+                Host
               </label>
-              <input
-                id="notice-topic-input"
-                type="text"
+              <select
+                id="notice-topic-select"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="Topic of study"
-                className="w-full text-xs px-2.5 py-1.5 border border-[#E6E4DD] rounded-lg bg-white text-[#3D3D33] focus:outline-none focus:border-[#5A5A40]"
+                className="w-full text-xs px-2.5 py-1.5 border border-[#E6E4DD] rounded-lg bg-white text-[#3D3D33] focus:outline-none focus:border-[#5A5A40] cursor-pointer"
                 required
-              />
+              >
+                <option value="">Select Host</option>
+                {members.map((m) => (
+                  <option key={m.id} value={`${m.title}. ${m.name}`}>
+                    {m.title}. {m.name} ({m.role})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -287,17 +292,22 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
             <div className="grid grid-cols-1 gap-2">
               <div>
                 <label className="block text-[9px] font-bold text-[#7A7A66] uppercase tracking-wider mb-1">
-                  Host Member
+                  Moderator
                 </label>
-                <input
-                  id="notice-host-input"
-                  type="text"
+                <select
+                  id="notice-host-select"
                   value={host}
                   onChange={(e) => setHost(e.target.value)}
-                  placeholder="Host name"
-                  className="w-full text-xs px-2.5 py-1.5 border border-[#E6E4DD] rounded-lg bg-white text-[#3D3D33] focus:outline-none focus:border-[#5A5A40]"
+                  className="w-full text-xs px-2.5 py-1.5 border border-[#E6E4DD] rounded-lg bg-white text-[#3D3D33] focus:outline-none focus:border-[#5A5A40] cursor-pointer"
                   required
-                />
+                >
+                  <option value="To be Announced">To be Announced</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={`${m.title}. ${m.name}`}>
+                      {m.title}. {m.name} ({m.role})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-[9px] font-bold text-[#7A7A66] uppercase tracking-wider mb-1">
@@ -339,7 +349,7 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
           <div className="space-y-3.5">
             <div className="bg-[#FAF9F6] border border-[#E6E4DD] p-3 rounded-xl shadow-inner space-y-1">
               <span className="text-[9px] font-extrabold uppercase bg-[#5A5A40] text-white px-1.5 py-0.5 rounded font-mono">
-                Topic of Study
+                Host
               </span>
               <h5 className="text-sm font-bold text-[#3D3D33] pt-0.5">
                 {notice.topic}
@@ -366,8 +376,8 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
               <div className="flex items-start gap-2">
                 <User className="w-3.5 h-3.5 text-[#5A5A40] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[9px] font-bold uppercase text-[#7A7A66] tracking-wider">Host Center</p>
-                  <p className="text-xs font-bold text-[#3D3D33]">{notice.host}</p>
+                  <p className="text-[9px] font-bold uppercase text-[#7A7A66] tracking-wider">Moderator</p>
+                  <p className="text-xs font-bold text-[#3D3D33]">{notice.host || 'To be Announced'}</p>
                 </div>
               </div>
 
