@@ -578,10 +578,19 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
                           <button
                             id={`member-avatar-btn-${member.id}`}
                             onClick={() => onSelectMember(member)}
-                            className="w-8 h-8 rounded-full border border-[#E6E4DD] flex items-center justify-center font-bold text-xs shrink-0 cursor-pointer transition-transform hover:scale-105 bg-[#F5F2ED] text-[#5A5A40]"
+                            className="w-8 h-8 rounded-full border border-[#E6E4DD] flex items-center justify-center font-bold text-xs shrink-0 cursor-pointer transition-transform hover:scale-105 bg-[#F5F2ED] text-[#5A5A40] overflow-hidden"
                             title="View attendance details"
                           >
-                            {member.name.slice(0, 2).toUpperCase()}
+                            {member.avatarUrl || localStorage.getItem(`avatar_${member.id}`) ? (
+                              <img 
+                                src={member.avatarUrl || localStorage.getItem(`avatar_${member.id}`) || ''} 
+                                alt={member.name} 
+                                className="w-full h-full object-cover" 
+                                referrerPolicy="no-referrer" 
+                              />
+                            ) : (
+                              member.name.slice(0, 2).toUpperCase()
+                            )}
                           </button>
 
                           {editingId === member.id ? (
