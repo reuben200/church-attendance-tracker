@@ -542,7 +542,7 @@ export default function App() {
                   Welcome back, {activeSimulatedMember.title}. {activeSimulatedMember.name}!
                 </h3>
                 <p className="text-xs text-[#FAF9F6]/90 leading-relaxed">
-                  You are logged into your personalized Member dashboard. You have exclusive access to review your attendance details, performance indexes, and sick leave records.
+                  You are logged into your personalized Member dashboard. You have exclusive access to review your attendance details, performance indexes, and sick records.
                 </p>
               </div>
 
