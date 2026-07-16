@@ -558,6 +558,7 @@ export default function App() {
                 member={activeSimulatedMember}
                 activities={activities}
                 sessions={sessions}
+                onUpdateMember={handleUpdateMember}
                 isMemberOnlyView={true}
               />
             </div>
