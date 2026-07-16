@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Member, Activity, AttendanceSession } from '../types';
 import { calculateMemberStats, getRemark } from '../utils';
-import { ArrowLeft, Award, Calendar, CheckCircle2, User, Upload, Trash2, Heart, HeartOff, Download } from 'lucide-react';
+import { ArrowLeft, Award, Calendar, CheckCircle2, User, Upload, Trash2, Heart, HeartOff, Download, Pencil, Check, X } from 'lucide-react';
 
 interface MemberDetailsProps {
   member: Member;
@@ -21,9 +21,40 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
   isMemberOnlyView = false,
 }) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
-    return localStorage.getItem(`avatar_${member.id}`) || null;
+    return member.avatarUrl || localStorage.getItem(`avatar_${member.id}`) || null;
   });
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [isEditingBirthday, setIsEditingBirthday] = useState(false);
+  const [bDayMonth, setBDayMonth] = useState('');
+  const [bDayDay, setBDayDay] = useState('');
+
+  const handleStartEditBirthday = () => {
+    if (member.birthday && member.birthday.includes('-')) {
+      const [mm, dd] = member.birthday.split('-');
+      setBDayMonth(mm);
+      setBDayDay(dd);
+    } else {
+      setBDayMonth('');
+      setBDayDay('');
+    }
+    setIsEditingBirthday(true);
+  };
+
+  const handleSaveBirthday = () => {
+    if (onUpdateMember) {
+      if (bDayMonth && bDayDay) {
+        onUpdateMember(member.id, { birthday: `${bDayMonth}-${bDayDay}` });
+      } else {
+        onUpdateMember(member.id, { birthday: '' });
+      }
+    }
+    setIsEditingBirthday(false);
+  };
+
+  React.useEffect(() => {
+    setAvatarUrl(member.avatarUrl || localStorage.getItem(`avatar_${member.id}`) || null);
+  }, [member.id, member.avatarUrl]);
 
   // Generate statistics
   const stats = calculateMemberStats(member, activities, sessions);
@@ -43,6 +74,9 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
         localStorage.setItem(`avatar_${member.id}`, base64String);
         setAvatarUrl(base64String);
         setIsUploading(false);
+        if (onUpdateMember) {
+          onUpdateMember(member.id, { avatarUrl: base64String });
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -51,6 +85,9 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
   const handleRemoveAvatar = () => {
     localStorage.removeItem(`avatar_${member.id}`);
     setAvatarUrl(null);
+    if (onUpdateMember) {
+      onUpdateMember(member.id, { avatarUrl: '' });
+    }
   };
 
   const handleExportIndividualCSV = () => {
@@ -177,7 +214,7 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
-                {!isMemberOnlyView && (
+                {onUpdateMember && (
                   <button
                     id="delete-avatar-btn"
                     onClick={handleRemoveAvatar}
@@ -198,7 +235,7 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
             )}
 
             {/* Custom Image Upload Form Overlay */}
-            {!isMemberOnlyView && (
+            {onUpdateMember && (
               <label
                 id="avatar-upload-label"
                 className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[#5A5A40] hover:bg-[#4E4E37] text-white rounded-lg flex items-center justify-center shadow-md cursor-pointer border border-[#4E4E37] transition-transform hover:scale-105"
@@ -231,6 +268,73 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono bg-[#FAF9F6] text-[#5A5A40] border border-[#E6E4DD]">
                 Access Code: {member.accessCode}
               </span>
+
+              {isEditingBirthday ? (
+                <div className="flex items-center gap-1 bg-[#FAF9F6] border border-[#E6E4DD] rounded-full px-2 py-0.5 text-xs">
+                  <span className="mr-1">🎂</span>
+                  <select
+                    id="member-details-birthday-month"
+                    value={bDayMonth}
+                    onChange={(e) => setBDayMonth(e.target.value)}
+                    className="bg-transparent border-none text-xs focus:ring-0 focus:outline-none p-0 cursor-pointer font-semibold text-[#5A5A40]"
+                  >
+                    <option value="">Month</option>
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const m = String(i + 1).padStart(2, '0');
+                      const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      return <option key={m} value={m}>{names[i]}</option>;
+                    })}
+                  </select>
+                  <span className="text-gray-300">/</span>
+                  <select
+                    id="member-details-birthday-day"
+                    value={bDayDay}
+                    onChange={(e) => setBDayDay(e.target.value)}
+                    className="bg-transparent border-none text-xs focus:ring-0 focus:outline-none p-0 cursor-pointer font-semibold text-[#5A5A40]"
+                  >
+                    <option value="">Day</option>
+                    {Array.from({ length: 31 }, (_, i) => {
+                      const d = String(i + 1).padStart(2, '0');
+                      return <option key={d} value={d}>{i + 1}</option>;
+                    })}
+                  </select>
+                  <button
+                    id="save-birthday-btn"
+                    onClick={handleSaveBirthday}
+                    className="ml-1 text-emerald-600 hover:text-emerald-700 p-0.5 cursor-pointer"
+                    title="Save Birthday"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    id="cancel-birthday-btn"
+                    onClick={() => setIsEditingBirthday(false)}
+                    className="text-rose-600 hover:text-rose-700 p-0.5 cursor-pointer"
+                    title="Cancel"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FAF9F6] text-[#5A5A40] border border-[#E6E4DD]">
+                  <span>🎂 Birthday: {member.birthday ? (() => {
+                    const [mm, dd] = member.birthday.split('-');
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const mIdx = parseInt(mm, 10) - 1;
+                    return mIdx >= 0 && mIdx < 12 ? `${monthNames[mIdx]} ${parseInt(dd, 10)}` : member.birthday;
+                  })() : 'Not Set'}</span>
+                  {onUpdateMember && (
+                    <button
+                      id="edit-birthday-inline-btn"
+                      onClick={handleStartEditBirthday}
+                      className="ml-1 text-[#7A7A66] hover:text-[#5A5A40] p-0.5 cursor-pointer"
+                      title="Edit Birthday"
+                    >
+                      <Pencil className="w-2.5 h-2.5" />
+                    </button>
+                  )}
+                </span>
+              )}
 
               {/* Sickness logic trigger */}
               {onUpdateMember && (
