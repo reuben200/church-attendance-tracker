@@ -20,6 +20,7 @@ export interface Member {
   outreachStatus?: OutreachStatus;
   outreachNotes?: string;
   birthday?: string; // format 'MM-DD', e.g. '07-14'
+  avatarUrl?: string; // Base64 or cloud storage URL for member photo
 }
 
 export interface HouseFellowshipNotice {
