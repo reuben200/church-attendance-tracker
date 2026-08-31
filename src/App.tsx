@@ -249,7 +249,10 @@ export default function App() {
     name: string,
     isSick: boolean,
     isVisible: boolean,
-    birthday?: string
+    birthday?: string,
+    phone?: string,
+    email?: string,
+    address?: string
   ) => {
     // Generate unique 7-digit alphanumeric code
     let accessCode = '';
@@ -275,6 +278,9 @@ export default function App() {
       role: 'member',
       accessCode,
       birthday: birthday || '',
+      phone: phone || '',
+      email: email || '',
+      address: address || '',
     };
 
     try {
@@ -610,6 +616,8 @@ export default function App() {
                       members={members}
                       activities={activities}
                       sessions={sessions}
+                      onSelectMember={(m) => setSelectedDetailMember(m)}
+                      onUpdateMember={handleUpdateMember}
                     />
                     {currentRole === 'Admin' && (
                       <GoogleSyncPanel
