@@ -104,7 +104,16 @@ const parseCSV = (text: string, defaultTitle: MemberTitle): Array<{ title: Membe
 
 interface MemberManagementProps {
   members: Member[];
-  onAddMember: (title: MemberTitle, name: string, isSick: boolean, isVisible: boolean, birthday?: string) => void;
+  onAddMember: (
+    title: MemberTitle,
+    name: string,
+    isSick: boolean,
+    isVisible: boolean,
+    birthday?: string,
+    phone?: string,
+    email?: string,
+    address?: string
+  ) => void;
   onUpdateMember: (id: string, updates: Partial<Member>) => void;
   onDeleteMember: (id: string) => void;
   onSelectMember: (member: Member) => void;
@@ -123,6 +132,9 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
   // Single Add Form State
   const [title, setTitle] = useState<MemberTitle>('Bro');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
   const [isSick, setIsSick] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [birthMonth, setBirthMonth] = useState('');
@@ -139,6 +151,8 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
   const [editTitle, setEditTitle] = useState<MemberTitle>('Bro');
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState<'member' | 'admin' | 'secretary'>('member');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editBirthMonth, setEditBirthMonth] = useState('');
   const [editBirthDay, setEditBirthDay] = useState('');
 
@@ -152,9 +166,21 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
       return;
     }
     const bday = birthMonth && birthDay ? `${birthMonth}-${birthDay}` : undefined;
-    onAddMember(title, name.trim(), isSick, isVisible, bday);
+    onAddMember(
+      title,
+      name.trim(),
+      isSick,
+      isVisible,
+      bday,
+      phone.trim() || undefined,
+      email.trim() || undefined,
+      address.trim() || undefined
+    );
     // Reset form
     setName('');
+    setPhone('');
+    setEmail('');
+    setAddress('');
     setIsSick(false);
     setIsVisible(true);
     setBirthMonth('');
@@ -319,6 +345,51 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Firstname Lastname"
                   className="w-full text-sm px-3.5 py-2 border border-[#E6E4DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 focus:border-[#5A5A40] bg-white text-[#3D3D33] transition-colors"
+                />
+              </div>
+
+              {/* Phone & Email Inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-bold text-[#7A7A66] uppercase tracking-wider mb-1.5">
+                    Phone (Optional)
+                  </label>
+                  <input
+                    id="member-phone-input"
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+234 801 234 5678"
+                    className="w-full text-xs px-3 py-2 border border-[#E6E4DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 focus:border-[#5A5A40] bg-white text-[#3D3D33]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#7A7A66] uppercase tracking-wider mb-1.5">
+                    Email (Optional)
+                  </label>
+                  <input
+                    id="member-email-input"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full text-xs px-3 py-2 border border-[#E6E4DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 focus:border-[#5A5A40] bg-white text-[#3D3D33]"
+                  />
+                </div>
+              </div>
+
+              {/* Residential Location */}
+              <div>
+                <label className="block text-xs font-bold text-[#7A7A66] uppercase tracking-wider mb-1.5">
+                  Residential Location / Center (Optional)
+                </label>
+                <input
+                  id="member-address-input"
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="e.g., Center A, Ikoyi"
+                  className="w-full text-xs px-3 py-2 border border-[#E6E4DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 focus:border-[#5A5A40] bg-white text-[#3D3D33]"
                 />
               </div>
 
