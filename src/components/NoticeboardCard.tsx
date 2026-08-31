@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
 import { Member, HouseFellowshipNotice, UserRole } from '../types';
-import { Cake, Calendar, Clock, MapPin, User, Edit3, Megaphone, Check, X, Sparkles, Bell } from 'lucide-react';
+import { getWeekBirthdaySummary } from '../utils';
+import {
+  Cake,
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  Edit3,
+  Megaphone,
+  Check,
+  X,
+  Sparkles,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  Phone,
+  MessageSquare,
+  Gift,
+} from 'lucide-react';
 
 // Helper to convert date to YYYY-MM-DD
 const toYYYYMMDD = (dateStr: string): string => {
@@ -68,6 +86,8 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
   const [address, setAddress] = useState(notice?.address || '');
   const [saving, setSaving] = useState(false);
 
+  const [weekOffset, setWeekOffset] = useState(0);
+
   // Initialize form fields when notice loads or editing starts
   React.useEffect(() => {
     if (notice) {
@@ -81,31 +101,8 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
 
   const canEdit = currentRole === 'Admin' || currentRole === 'Secretary';
 
-  // Calculate Birthdays (Today & Tomorrow)
-  const getTodayAndTomorrowMMDD = () => {
-    const today = new Date();
-    const format = (d: Date) => {
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${mm}-${dd}`;
-    };
-
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-
-    return {
-      todayStr: format(today),
-      tomorrowStr: format(tomorrow),
-    };
-  };
-
-  const { todayStr, tomorrowStr } = getTodayAndTomorrowMMDD();
-
-  // Filter members (only visible ones to be safe, or all active members)
-  const birthdaysToday = members.filter((m) => m.birthday === todayStr);
-  const birthdaysTomorrow = members.filter((m) => m.birthday === tomorrowStr);
-
-  const hasBirthdays = birthdaysToday.length > 0 || birthdaysTomorrow.length > 0;
+  // Calculate Birthdays for the selected week
+  const weekSummary = getWeekBirthdaySummary(members, weekOffset, 'monday');
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,74 +133,203 @@ export const NoticeboardCard: React.FC<NoticeboardCardProps> = ({
   };
 
   return (
-    <div id="noticeboard-card" className="bg-white rounded-2xl border border-[#C8C8A9] shadow-md overflow-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-[#E6E4DD]">
+    <div id="noticeboard-card" className="bg-white rounded-2xl border border-[#C8C8A9] shadow-md overflow-hidden flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-[#E6E4DD]">
       
-      {/* SECTION 1: BIRTHDAY NOTIFICATIONS */}
-      <div className="flex-1 p-5 space-y-4 bg-gradient-to-br from-[#FAF9F6] to-white">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-[#E6E4DD]">
-          <div className="p-1.5 bg-[#FDF2F2] border border-[#FAD2D2] rounded-lg text-[#B25E5E]">
-            <Cake className="w-4 h-4" />
+      {/* SECTION 1: BIRTHDAY NOTIFICATIONS FOR THE WEEK */}
+      <div className="flex-1 p-5 space-y-3.5 bg-gradient-to-br from-[#FAF9F6] to-white">
+        
+        {/* Header & Week Range Selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#E6E4DD]">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-[#FDF2F2] border border-[#FAD2D2] rounded-lg text-[#B25E5E]">
+              <Cake className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-serif font-bold text-[#3D3D33] tracking-tight">
+                  {weekOffset === 0 ? 'Birthdays This Week' : weekOffset === 1 ? 'Birthdays Next Week' : 'Birthdays (Weekly)'}
+                </h4>
+                <span className="text-[10px] px-2 py-0.5 font-bold rounded-full bg-[#5A5A40]/10 text-[#5A5A40]">
+                  {weekSummary.celebrants.length} {weekSummary.celebrants.length === 1 ? 'Celebrant' : 'Celebrants'}
+                </span>
+              </div>
+              <p className="text-[10px] text-[#7A7A66] font-medium">
+                {weekSummary.formattedRange}
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-serif font-bold text-[#3D3D33] tracking-tight">
-              Congregation Birthdays
-            </h4>
-            <p className="text-[10px] text-[#7A7A66] font-medium">
-              Real-time daily birthday countdown tracker
-            </p>
+
+          {/* Week Navigation Controls */}
+          <div className="flex items-center gap-1 self-start sm:self-auto">
+            {weekOffset !== 0 && (
+              <button
+                type="button"
+                onClick={() => setWeekOffset(0)}
+                className="text-[10px] font-bold text-[#5A5A40] hover:text-[#3D3D33] px-2 py-0.5 bg-[#F5F2ED] hover:bg-[#E6E4DD] rounded-md transition-colors cursor-pointer mr-1"
+                title="Jump to current week"
+              >
+                This Week
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setWeekOffset((prev) => prev - 1)}
+              className="p-1 text-[#7A7A66] hover:text-[#3D3D33] hover:bg-[#E6E4DD] rounded-md transition-colors cursor-pointer"
+              title="Previous Week"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekOffset((prev) => prev + 1)}
+              className="p-1 text-[#7A7A66] hover:text-[#3D3D33] hover:bg-[#E6E4DD] rounded-md transition-colors cursor-pointer"
+              title="Next Week"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {hasBirthdays ? (
-          <div className="space-y-3">
-            {/* Birthdays Today */}
-            {birthdaysToday.length > 0 && (
-              <div className="p-3.5 bg-[#FDF2F2]/60 border border-[#FAD2D2]/80 rounded-xl space-y-1.5 shadow-sm">
-                <p className="text-[10px] font-extrabold text-[#B25E5E] uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                  Celebrating Today!
-                </p>
-                <div className="space-y-1">
-                  {birthdaysToday.map((m) => (
-                    <p key={m.id} className="text-sm font-bold text-[#3D3D33]">
-                      🎉 {m.title}. {m.name}
-                    </p>
-                  ))}
-                </div>
-                <p className="text-[10px] text-[#7A7A66] italic">
-                  Let us celebrate together and thank God for their lives!
-                </p>
+        {/* 7-Day Mini Calendar Strip */}
+        <div className="grid grid-cols-7 gap-1 bg-[#F5F2ED]/60 p-1.5 rounded-xl border border-[#E6E4DD]/80">
+          {weekSummary.days.map((day) => {
+            const hasCelebrant = weekSummary.celebrants.some((c) => c.dayInfo.mmDd === day.mmDd);
+            const isToday = day.isToday;
+            return (
+              <div
+                key={day.mmDd}
+                className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-lg text-center transition-all ${
+                  isToday
+                    ? 'bg-[#5A5A40] text-white shadow-xs'
+                    : hasCelebrant
+                    ? 'bg-[#FDF2F2] border border-[#FAD2D2] text-[#B25E5E]'
+                    : 'bg-white/60 text-[#7A7A66]'
+                }`}
+              >
+                <span className={`text-[9px] uppercase font-bold ${isToday ? 'text-white/80' : ''}`}>
+                  {day.shortDayName[0]}
+                </span>
+                <span className={`text-xs font-bold leading-tight ${isToday ? 'text-white' : 'text-[#3D3D33]'}`}>
+                  {day.dayNumber}
+                </span>
+                {hasCelebrant && (
+                  <span className="text-[8px] leading-none pt-0.5" title="Birthday Celebrant!">
+                    🎂
+                  </span>
+                )}
               </div>
-            )}
+            );
+          })}
+        </div>
 
-            {/* Birthdays Tomorrow (a day to the birthday) */}
-            {birthdaysTomorrow.length > 0 && (
-              <div className="p-3.5 bg-[#F5F2ED]/60 border border-[#E6E4DD] rounded-xl space-y-1.5 shadow-sm">
-                <p className="text-[10px] font-extrabold text-[#5A5A40] uppercase tracking-wider flex items-center gap-1">
-                  <Bell className="w-3.5 h-3.5 text-[#D4A373]" />
-                  Birthday Tomorrow
-                </p>
-                <div className="space-y-1">
-                  {birthdaysTomorrow.map((m) => (
-                    <p key={m.id} className="text-sm font-bold text-[#3D3D33]">
-                      🎂 {m.title}. {m.name}
-                    </p>
-                  ))}
+        {/* Weekly Celebrants List */}
+        {weekSummary.celebrants.length > 0 ? (
+          <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+            {weekSummary.celebrants.map(({ member, dayInfo }) => {
+              const isToday = dayInfo.isToday;
+              const isTomorrow = dayInfo.isTomorrow;
+              const isPassed = dayInfo.daysDiff < 0;
+
+              return (
+                <div
+                  key={member.id}
+                  className={`p-3 rounded-xl border transition-all ${
+                    isToday
+                      ? 'bg-[#FDF2F2] border-[#FAD2D2] shadow-xs'
+                      : isTomorrow
+                      ? 'bg-[#FAF9F6] border-[#C8C8A9]'
+                      : 'bg-white border-[#E6E4DD]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                          isToday
+                            ? 'bg-[#B25E5E] text-white ring-2 ring-[#B25E5E]/20'
+                            : 'bg-[#5A5A40] text-white'
+                        }`}
+                      >
+                        {member.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-xs font-bold text-[#3D3D33]">
+                            {member.title}. {member.name}
+                          </p>
+                          {/* Status Badge */}
+                          {isToday && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-[#B25E5E] text-white">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              Today!
+                            </span>
+                          )}
+                          {isTomorrow && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#D4A373] text-white">
+                              <Bell className="w-2.5 h-2.5" />
+                              Tomorrow
+                            </span>
+                          )}
+                          {!isToday && !isTomorrow && (
+                            <span className="text-[9px] font-semibold text-[#7A7A66] bg-[#F5F2ED] px-1.5 py-0.5 rounded">
+                              {dayInfo.dayName} ({dayInfo.formattedDate})
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-[10px] text-[#7A7A66]">
+                          {dayInfo.formattedFullDate} •{' '}
+                          {isToday
+                            ? 'Celebrating Today! 🎉'
+                            : isTomorrow
+                            ? 'Birthday Tomorrow'
+                            : isPassed
+                            ? 'Celebrated earlier this week'
+                            : `In ${dayInfo.daysDiff} days`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Celebration outreach shortcuts */}
+                    {member.phone && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <a
+                          href={`https://wa.me/${member.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                            `Happy Birthday ${member.title}. ${member.name}! 🎂🎉 Wishing you God's richest blessings, joy, and peace as you celebrate your birthday on ${dayInfo.formattedFullDate}! - From Church of Christ`
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-[#25D366] text-white hover:bg-[#20b859] rounded-lg transition-colors"
+                          title="Send WhatsApp Birthday Greeting"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href={`tel:${member.phone.replace(/[^0-9+]/g, '')}`}
+                          className="p-1.5 bg-white hover:bg-[#5A5A40] hover:text-white text-[#5A5A40] border border-[#C8C8A9] rounded-lg transition-colors"
+                          title="Call Member"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[10px] text-[#7A7A66]">
-                  Notification sent to all. Get ready to celebrate them tomorrow!
-                </p>
-              </div>
-            )}
+              );
+            })}
           </div>
         ) : (
-          <div className="py-8 text-center space-y-1">
+          <div className="py-6 text-center space-y-2 bg-[#FAF9F6]/50 rounded-xl border border-dashed border-[#E6E4DD]">
             <p className="text-xs font-semibold text-[#7A7A66]">
-              No birthdays today or tomorrow.
+              No birthdays in the week of {weekSummary.formattedRange}.
             </p>
-            <p className="text-[10px] text-[#9A9A88]">
-              Up next: keep checking the notices for the next celebrating member!
-            </p>
+            <button
+              type="button"
+              onClick={() => setWeekOffset((prev) => prev + 1)}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#5A5A40] hover:text-[#3D3D33] bg-white border border-[#C8C8A9] px-2.5 py-1 rounded-lg transition-all shadow-xs cursor-pointer"
+            >
+              Check Next Week <ChevronRight className="w-3 h-3" />
+            </button>
           </div>
         )}
       </div>
