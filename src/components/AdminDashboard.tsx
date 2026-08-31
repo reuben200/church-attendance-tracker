@@ -293,7 +293,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div>
           <h2 className="text-xl font-serif font-bold tracking-tight text-[#3D3D33] flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#5A5A40]" />
-            Executive Attendance & Pastoral Dashboard
+            Executive Attendance & Members Dashboard
           </h2>
           <p className="text-sm text-[#7A7A66]">
             Congregational metrics, pastoral sickness care records, and upcoming monthly celebrations.
