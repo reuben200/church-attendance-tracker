@@ -1,7 +1,26 @@
 import React, { useState } from 'react';
 import { Member, Activity, AttendanceSession } from '../types';
 import { calculateMemberStats, getRemark } from '../utils';
-import { ArrowLeft, Award, Calendar, CheckCircle2, User, Upload, Trash2, Heart, HeartOff, Download, Pencil, Check, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Award,
+  Calendar,
+  CheckCircle2,
+  User,
+  Upload,
+  Trash2,
+  Heart,
+  HeartOff,
+  Download,
+  Pencil,
+  Check,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Edit3,
+} from 'lucide-react';
 
 interface MemberDetailsProps {
   member: Member;
@@ -29,6 +48,12 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
   const [bDayMonth, setBDayMonth] = useState('');
   const [bDayDay, setBDayDay] = useState('');
 
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [phone, setPhone] = useState(member.phone || '');
+  const [email, setEmail] = useState(member.email || '');
+  const [address, setAddress] = useState(member.address || '');
+  const [notes, setNotes] = useState(member.outreachNotes || '');
+
   const handleStartEditBirthday = () => {
     if (member.birthday && member.birthday.includes('-')) {
       const [mm, dd] = member.birthday.split('-');
@@ -50,6 +75,26 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
       }
     }
     setIsEditingBirthday(false);
+  };
+
+  const handleStartEditContact = () => {
+    setPhone(member.phone || '');
+    setEmail(member.email || '');
+    setAddress(member.address || '');
+    setNotes(member.outreachNotes || '');
+    setIsEditingContact(true);
+  };
+
+  const handleSaveContact = () => {
+    if (onUpdateMember) {
+      onUpdateMember(member.id, {
+        phone: phone.trim(),
+        email: email.trim(),
+        address: address.trim(),
+        outreachNotes: notes.trim(),
+      });
+    }
+    setIsEditingContact(false);
   };
 
   React.useEffect(() => {
@@ -366,6 +411,166 @@ export const MemberDetails: React.FC<MemberDetailsProps> = ({
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Member Contact & Pastoral Information Card */}
+      <div className="bg-white rounded-2xl border border-[#E6E4DD] shadow-sm p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-[#E6E4DD] pb-3">
+          <h4 className="text-base font-serif font-bold text-[#3D3D33] flex items-center gap-2">
+            <Phone className="w-4 h-4 text-[#5A5A40]" />
+            Contact & Pastoral Care Information
+          </h4>
+          {onUpdateMember && !isEditingContact && (
+            <button
+              onClick={handleStartEditContact}
+              className="text-xs font-bold text-[#5A5A40] hover:bg-[#FAF9F6] border border-[#C8C8A9] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-xs"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              Edit Contact
+            </button>
+          )}
+        </div>
+
+        {!isEditingContact ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            {/* Phone Block */}
+            <div className="bg-[#FAF9F6] p-3.5 rounded-xl border border-[#E6E4DD] space-y-1.5">
+              <p className="text-[10px] font-bold text-[#7A7A66] uppercase tracking-wider flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-[#5A5A40]" />
+                Phone Number
+              </p>
+              <p className="font-mono font-semibold text-sm text-[#3D3D33]">
+                {member.phone || <span className="text-[#7A7A66] font-sans font-normal italic text-xs">No phone number recorded</span>}
+              </p>
+              {member.phone && (
+                <div className="flex items-center gap-2 pt-1">
+                  <a
+                    href={`tel:${member.phone.replace(/[^0-9+]/g, '')}`}
+                    className="px-2.5 py-1 bg-white hover:bg-[#5A5A40] hover:text-white text-[#5A5A40] border border-[#C8C8A9] rounded text-[11px] font-bold transition-colors"
+                  >
+                    Call
+                  </a>
+                  <a
+                    href={`https://wa.me/${member.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                      `Hello ${member.title}. ${member.name}, greetings from Church of Christ!`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 bg-[#25D366] text-white hover:bg-[#20b859] rounded text-[11px] font-bold transition-colors"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Email Block */}
+            <div className="bg-[#FAF9F6] p-3.5 rounded-xl border border-[#E6E4DD] space-y-1.5">
+              <p className="text-[10px] font-bold text-[#7A7A66] uppercase tracking-wider flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-[#5A5A40]" />
+                Email Address
+              </p>
+              <p className="font-semibold text-sm text-[#3D3D33] truncate">
+                {member.email || <span className="text-[#7A7A66] font-sans font-normal italic text-xs">No email address recorded</span>}
+              </p>
+              {member.email && (
+                <div className="pt-1">
+                  <a
+                    href={`mailto:${member.email}`}
+                    className="px-2.5 py-1 bg-white hover:bg-[#5A5A40] hover:text-white text-[#5A5A40] border border-[#C8C8A9] rounded text-[11px] font-bold transition-colors inline-block"
+                  >
+                    Send Email
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Address Block */}
+            <div className="bg-[#FAF9F6] p-3.5 rounded-xl border border-[#E6E4DD] space-y-1.5">
+              <p className="text-[10px] font-bold text-[#7A7A66] uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#7A7A66]" />
+                Residence / Location
+              </p>
+              <p className="text-xs text-[#3D3D33]">
+                {member.address || <span className="text-[#7A7A66] italic">No residential address specified</span>}
+              </p>
+            </div>
+
+            {/* Pastoral Notes if present */}
+            {member.outreachNotes && (
+              <div className="md:col-span-3 bg-[#FAF9F6] p-3.5 rounded-xl border border-[#E6E4DD] space-y-1">
+                <p className="text-[10px] font-bold text-[#7A7A66] uppercase tracking-wider">
+                  Pastoral Care / Welfare Notes
+                </p>
+                <p className="text-xs text-[#3D3D33] italic">
+                  "{member.outreachNotes}"
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-[#FAF9F6] p-4 rounded-xl border border-[#5A5A40] space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold text-[#7A7A66] uppercase mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+234 801 234 5678"
+                  className="w-full text-xs px-3 py-1.5 bg-white border border-[#E6E4DD] rounded-lg focus:outline-none focus:border-[#5A5A40]"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-[#7A7A66] uppercase mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="member@example.com"
+                  className="w-full text-xs px-3 py-1.5 bg-white border border-[#E6E4DD] rounded-lg focus:outline-none focus:border-[#5A5A40]"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-[#7A7A66] uppercase mb-1">Residential Address</label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Residential location, house fellowship center"
+                className="w-full text-xs px-3 py-1.5 bg-white border border-[#E6E4DD] rounded-lg focus:outline-none focus:border-[#5A5A40]"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-[#7A7A66] uppercase mb-1">Pastoral / Sickness / Care Notes</label>
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Health status notes, pastoral visit details..."
+                className="w-full text-xs px-3 py-1.5 bg-white border border-[#E6E4DD] rounded-lg focus:outline-none focus:border-[#5A5A40]"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E6E4DD]">
+              <button
+                type="button"
+                onClick={() => setIsEditingContact(false)}
+                className="px-3 py-1.5 text-xs text-[#7A7A66] hover:bg-[#E6E4DD] rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveContact}
+                className="px-4 py-1.5 bg-[#5A5A40] text-white text-xs font-bold rounded-lg hover:bg-[#4E4E37] flex items-center gap-1 shadow-xs"
+              >
+                <Check className="w-3.5 h-3.5" />
+                Save Contact Info
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Individual Attendance Activity Summary */}
