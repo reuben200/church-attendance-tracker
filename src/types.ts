@@ -17,6 +17,9 @@ export interface Member {
   isVisible: boolean; // Toggled by eye icon, if false, not shown in attendance sheet
   role: 'member' | 'admin' | 'secretary'; // Default 'member'
   accessCode: string; // 7-character auto-generated alphanumeric code
+  phone?: string; // e.g. "+234 801 234 5678"
+  email?: string; // e.g. "member@example.com"
+  address?: string; // Residential address or fellowship center
   outreachStatus?: OutreachStatus;
   outreachNotes?: string;
   birthday?: string; // format 'MM-DD', e.g. '07-14'
