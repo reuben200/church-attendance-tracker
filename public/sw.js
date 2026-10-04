@@ -2,14 +2,13 @@ const CACHE_NAME = 'igbe-attendance-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
-  '/pwa_icon_192.jpg', 
-  '/pwa_icon_512.jpg'
+  '/pwa_icon_192.webp',
+  '/pwa_icon_512.webp'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // FIX: Map assets individually so a missing file doesn't crash the install loop
       const cachePromises = ASSETS_TO_CACHE.map((url) => {
         return cache.add(url).catch((err) => {
           console.warn(`[PWA SW] Failed to cache critical asset during install: ${url}`, err);
@@ -35,30 +34,25 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only intercept requests originating from our app's domain and GET methods
   if (!event.request.url.startsWith(self.location.origin) || event.request.method !== 'GET') {
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // 1. If it exists in cache, return it immediately and update in background safely
       if (cachedResponse) {
         event.waitUntil(
           fetch(event.request)
             .then((networkResponse) => {
               if (networkResponse.status === 200) {
-                return caches.open(CACHE_NAME).then((cache) => {
-                  return cache.put(event.request, networkResponse);
-                });
+                return caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
               }
             })
-            .catch(() => {/* Ignore background network sync errors */})
+            .catch(() => {})
         );
         return cachedResponse;
       }
 
-      // 2. Cache Miss: Fetch from network and clone safely
       return fetch(event.request).then((response) => {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
@@ -66,9 +60,7 @@ self.addEventListener('fetch', (event) => {
 
         const responseToCache = response.clone();
         event.waitUntil(
-          caches.open(CACHE_NAME).then((cache) => {
-            return cache.put(event.request, responseToCache);
-          })
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache))
         );
 
         return response;
