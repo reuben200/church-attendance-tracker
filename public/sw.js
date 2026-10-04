@@ -1,16 +1,21 @@
 const CACHE_NAME = 'igbe-attendance-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
   '/manifest.json',
-  '/pwa_icon_192.jpg', // Make sure this matches your manifest!
+  '/pwa_icon_192.jpg', 
   '/pwa_icon_512.jpg'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      // FIX: Map assets individually so a missing file doesn't crash the install loop
+      const cachePromises = ASSETS_TO_CACHE.map((url) => {
+        return cache.add(url).catch((err) => {
+          console.warn(`[PWA SW] Failed to cache critical asset during install: ${url}`, err);
+        });
+      });
+      return Promise.all(cachePromises);
     }).then(() => self.skipWaiting())
   );
 });
